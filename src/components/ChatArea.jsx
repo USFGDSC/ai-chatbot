@@ -178,6 +178,24 @@ function ChatArea({
   const generatePlaylist = async (userMessage) => {
     try {
       // ***** use the gemini api below*******
+
+      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+      console.log('Attempting API call..');
+      const prompt = `Act as a music expert.
+                  Create a playlist for this request: ${userMessage}.
+                  Return exactly a valid JSON array in this format:
+                  [{"title": "Song Name","artist":"Artist Name"}]
+                  No code blocks, no extra text. Just the JSON array.
+                  Minimum 5 songs, maximum 10.`;
+      const result=await model.generateContent({
+        contents: [{role:"user", parts: [{ text: prompt }] }]
+      });
+      const response = await result.response;
+      const botResponse = response.text();
+
+      console.log('API Response: botResponse');
       
       
       // change the json file into 
