@@ -173,55 +173,45 @@ function ChatArea({
     }
   };
 
-  // ********** WRITE the GENERATE PLAYLIST FUNCTION BELOW ************
+  //generate playlist section
 
   const generatePlaylist = async (userMessage) => {
     try {
-      // ***** use the gemini api below*******
-
       const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-      console.log('Attempting API call..');
-      const prompt = `Act as a music expert.
-                  Create a playlist for this request: ${userMessage}.
-                  Return exactly a valid JSON array in this format:
-                  [{"title": "Song Name","artist":"Artist Name"}]
-                  No code blocks, no extra text. Just the JSON array.
+      console.log('Attempting API call...');
+      const prompt = `Act as a music expert. 
+                  Create a playlist for this request: ${userMessage}. 
+                  Return exactly a valid JSON array in this format: 
+                  [{"title":"Song Name","artist":"Artist Name"}]
+                  No code blocks, no extra text. Just the JSON array. 
                   Minimum 5 songs, maximum 10.`;
-      const result=await model.generateContent({
-        contents: [{role:"user", parts: [{ text: prompt }] }]
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }]
       });
       const response = await result.response;
-      const botResponse = response.text();
+      const botResponse =  response.text();
 
-      console.log('API Response: botResponse');
-      
-      
-      // change the json file into 
+      console.log('API Response:', botResponse);
+
       try {
-        // Removes any JSON code block formatting from the bot's response.
         const cleanedResponse = botResponse.replace(/```json\n?|\n?```/g, '').trim();
-        // Parses the cleaned response string into a JavaScript object or array.
         const playlistData = JSON.parse(cleanedResponse);
-        // Checks if the parsed data is an array and has at least one item.
+        
         if (Array.isArray(playlistData) && playlistData.length > 0) {
-          // Updates the application's state with the new playlist data.
           setPlaylist(playlistData);
-          // Returns an object indicating the data was successfully processed and is a playlist.
           return { text: playlistData, sender: 'bot', isPlaylist: true };
         }
       } catch (error) {
-        // Logs any errors encountered during the parsing or processing to the console.
         console.error('Error parsing playlist:', error);
-        
-        // Returns an object indicating that there was an error processing the playlist data.
         return {
           text: 'Sorry, I had trouble formatting the playlist. Please try again.',
           sender: 'bot',
           isPlaylist: false
         };
       }
+
       return { text: botResponse, sender: 'bot', isPlaylist: false };
     } catch (error) {
       console.error('Gemini API Error:', error);
